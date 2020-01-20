@@ -1,0 +1,23 @@
+version: '3.4'
+
+services: 
+  api:
+    container_name: datastreamer_api
+    build: ./DataStreamer.API
+    ports:
+      - 32331:80
+    networks:
+      - DataStreamer
+      
+  frontend:
+    container_name: datastreamer_frontend
+    build: ./DataStreamer.Frontend
+    ports:
+      - 32330:3000
+    environment:
+      - NODE_ENV=development
+    networks:
+      - DataStreamer
+
+networks:
+  DataStreamer:

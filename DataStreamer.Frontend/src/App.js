@@ -17,19 +17,20 @@ function App() {
         webSocket.onmessage = onMessageReceived;
     };
 
-    var ulElement = document.getElementById('StreamToMe');
+    var container = document.getElementById('StreamToMe');
 
     getWebSocketMessages(function (message) {
-        ulElement.innerHTML = ulElement.innerHTML += `<li>${message.data}</li>`
+      console.log(message.data);
+      var data = JSON.parse(message.data);      
+      container.innerHTML =  `<tr><td>${data.name}</td> <td>${data.age}</td> <td>${data.jobTitle}</td></tr>` + container.innerHTML
     });
 };
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        
-        <ul id="StreamToMe"></ul>
+        <img src={logo} className="App-logo" alt="logo" />        
+        <table id="StreamToMe"></table>
       </header>
     </div>
   );

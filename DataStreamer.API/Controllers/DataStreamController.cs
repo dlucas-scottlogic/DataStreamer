@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace DataStreamer.API.Controllers
 {
@@ -68,8 +69,15 @@ namespace DataStreamer.API.Controllers
                 string line = datahelixProcess.StandardOutput.ReadLine();
 
                 var items = line.Split(",");
+                var data = JsonConvert.SerializeObject(
+                    new
+                    {
+                        name = items[1],
+                        age = items[2],
+                        jobTitle = items[0]
+                    });
 
-                var bytes = Encoding.ASCII.GetBytes(items[1]);
+                var bytes = Encoding.ASCII.GetBytes(data);
                 var arraySegment = new ArraySegment<byte>(bytes);
                 await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
                 Thread.Sleep(200); //sleeping so that we can see several messages are sent

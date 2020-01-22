@@ -8,6 +8,10 @@ services:
       - 32331:80
     networks:
       - DataStreamer
+    environment:
+      - javapath=/usr/bin/java
+      - generatorpath=/app/Libraries/generator.jar
+      - profilepath=/app/Libraries/profile.json
       
   frontend:
     container_name: datastreamer_frontend

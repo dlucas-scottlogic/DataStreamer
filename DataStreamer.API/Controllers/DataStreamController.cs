@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -33,25 +33,55 @@ namespace DataStreamer.API.Controllers
 
         private async Task GetMessages(HttpContext context, WebSocket webSocket)
         {
-            var messages = new[]
+            var javaPath = System.Environment.GetEnvironmentVariable("javapath");
+            var generatorJar = System.Environment.GetEnvironmentVariable("generatorpath");
+            var profilePath = System.Environment.GetEnvironmentVariable("profilepath");
+
+            var datahelixProcess = new Process
             {
-            "Message1",
-            "Message2",
-            "Message3",
-            "Message4",
-            "Message5"
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = javaPath,
+                    Arguments = $"-jar {generatorJar} --max-rows=100 --profile-file={profilePath}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true
+                }
             };
 
-            foreach (var message in messages)
+            var errors = new List<string>();
+            datahelixProcess.ErrorDataReceived += (sender, args) =>
             {
-                var bytes = Encoding.ASCII.GetBytes(message);
-                var arraySegment = new ArraySegment<byte>(bytes);
-                await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
-                Thread.Sleep(1000); //sleeping so that we can see several messages are sent
+                errors.Add(args.Data);
+            };
+
+            if (!datahelixProcess.Start())
+            {
+                throw new Exception($"Could not start datahelix. Filename: {datahelixProcess.StartInfo.FileName} Exitcode: {datahelixProcess.ExitCode} ");
             }
 
-            //await webSocket.SendAsync(new ArraySegment<byte>(null), WebSocketMessageType.Binary, false, CancellationToken.None);
-        }
+            datahelixProcess.BeginErrorReadLine();
 
+            while (!datahelixProcess.StandardOutput.EndOfStream)
+            {
+                string line = datahelixProcess.StandardOutput.ReadLine();
+
+                var items = line.Split(",");
+
+                var bytes = Encoding.ASCII.GetBytes(items[1]);
+                var arraySegment = new ArraySegment<byte>(bytes);
+                await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
+                Thread.Sleep(200); //sleeping so that we can see several messages are sent
+            }
+            
+            if (datahelixProcess.ExitCode != 0)
+            {
+                var errorMessages = String.Join("\r\n", errors);
+                throw new InvalidOperationException($"Process exited with error code {datahelixProcess.ExitCode}\r\n{errorMessages}");
+            }
+
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of stream", CancellationToken.None);
+        }        
     }
 }

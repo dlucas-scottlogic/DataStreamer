@@ -43,7 +43,7 @@ namespace DataStreamer.API.Controllers
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = javaPath,
-                    Arguments = $"-jar {generatorJar} --max-rows=100 --profile-file={profilePath}",
+                    Arguments = $"-jar {generatorJar} --max-rows=100 --profile-file={profilePath} --output-format=json",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
@@ -68,16 +68,7 @@ namespace DataStreamer.API.Controllers
             {
                 string line = datahelixProcess.StandardOutput.ReadLine();
 
-                var items = line.Split(",");
-                var data = JsonConvert.SerializeObject(
-                    new
-                    {
-                        name = items[1],
-                        age = items[2],
-                        jobTitle = items[0]
-                    });
-
-                var bytes = Encoding.ASCII.GetBytes(data);
+                var bytes = Encoding.ASCII.GetBytes(line);
                 var arraySegment = new ArraySegment<byte>(bytes);
                 await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
                 Thread.Sleep(200); //sleeping so that we can see several messages are sent

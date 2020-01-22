@@ -22,7 +22,7 @@ function App() {
     getWebSocketMessages(function (message) {
       console.log(message.data);
       var data = JSON.parse(message.data);      
-      container.innerHTML =  `<tr><td>${data.name}</td> <td>${data.age}</td> <td>${data.jobTitle}</td></tr>` + container.innerHTML
+      container.innerHTML =  `<tr><td>${data.firstName}</td> <td>${data.age}</td> <td>${data.username}</td></tr>` + container.innerHTML
     });
 };
 

@@ -1,0 +1,43 @@
+#demo-content {
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  color: #ffffff;
+  font-size: 15px;
+}
+
+#demo-content:after{
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+
+  background-image: linear-gradient(to bottom, transparent, #7462e0);
+}
+
+#demo-content > div {
+  display: flex;
+  flex-direction: row;
+}
+
+#demo-content > div > label {
+  flex-grow: 1;
+  font-weight: bold;
+  
+  border-bottom: 1px solid #ffffff;
+  padding: 5px;
+
+  text-overflow: ellipsis;
+}
+
+#demo-content > div > span {
+  flex-grow: 1;
+  text-overflow: ellipsis;
+}

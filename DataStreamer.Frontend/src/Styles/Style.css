@@ -1,0 +1,67 @@
+.icon-header {
+    text-indent: -9999px;
+    width: 100%;
+    height: 155px;
+    margin-bottom: 1rem;
+  }
+  
+  .navbar-brand {
+    background: url(../Icons/logo.svg) left center transparent no-repeat;
+    padding-left: 50px;
+  }
+  
+  .title {
+    background: url(../Icons/logo-white.svg) center center transparent no-repeat;
+  }
+  
+  .open-source {
+    background: url(../Icons/open-box.svg) center center transparent no-repeat;
+  }
+  
+  .declarative-rules {
+    background: url(../Icons/rules.svg) center center transparent no-repeat;
+  }
+  
+  .open-architecture {
+    background: url(../Icons/connected.svg) center center transparent no-repeat;
+  }
+  
+  .big-data {
+    background: url(../Icons/database.svg) center center transparent no-repeat;
+  }
+  
+  .jumbotron {
+    color: white;
+    text-align: center;
+    background-color: #7462e0;
+    font-size: 1.5rem;
+    border-radius: 0;
+  }
+  
+  .jumbotron a {
+    font-size: 1.2rem;
+    background-color: #ddd;
+    color: black !important;
+    border: 0;
+  }
+  
+  .jumbotron a:hover {
+    background-color: #fff;
+    color: #7462e0 !important;
+  }
+  
+  a, a:hover {
+    color: #7462e0;
+  }
+  
+  .features {
+    font-size: 1.2rem;
+  }
+  
+  .notices {
+    color: white;
+    text-align: center;
+    padding: 2rem 2rem;
+    margin-top: 2em;
+    background-color: #303846;
+  }

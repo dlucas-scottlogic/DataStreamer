@@ -1,15 +1,14 @@
-import React, { useEffect }  from 'react';
+import React from 'react';
 import Stream from './Components/Stream'
 import './Styles/Bootstrap.css';
 import './Styles/Style.css';
 import './Styles/App.css';
 
-
 function App() {
   return (    
     <div className="App">
         <nav className="navbar navbar-expand-lg">
-            <a className="navbar-brand" href="#">DataHelix Generator</a>
+            <a className="navbar-brand" href="http://localhost:32330">DataHelix Generator</a>
             <button
                 className="navbar-toggler"
                 type="button"
@@ -50,7 +49,7 @@ function App() {
         </nav>
 
         <div className="jumbotron">
-            <h1 class="icon-header title">DataHelix Generator</h1>
+            <h1 className="icon-header title">DataHelix Generator</h1>
             <Stream />
         </div>
 

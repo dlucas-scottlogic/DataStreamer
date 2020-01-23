@@ -1,6 +1,7 @@
 import React, { useEffect }  from 'react';
 import logo from './logo.svg';
 import './App.css';
+import $ from 'jquery';
 
 function App() {
 
@@ -19,18 +20,26 @@ function App() {
 
     var container = document.getElementById('StreamToMe');
 
-    getWebSocketMessages(function (message) {
-      console.log(message.data);
-      var data = JSON.parse(message.data);      
-      container.innerHTML =  `<tr><td>${data.firstName}</td> <td>${data.age}</td> <td>${data.username}</td></tr>` + container.innerHTML
-    });
+    var updateDom = function (message) {
+      var data = JSON.parse(message.data);  
+
+      var listLength = $("#StreamToMe div").length
+      
+      if(listLength > 24){
+          $('#StreamToMe div:last-child').remove();
+      }
+
+      container.innerHTML =  `<div id="dataitem">${data.firstName} - ${data.age} - ${data.username}</div>` + container.innerHTML
+    }
+
+    getWebSocketMessages(updateDom);
 };
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />        
-        <table id="StreamToMe"></table>
+        <div id="StreamToMe"></div>
       </header>
     </div>
   );

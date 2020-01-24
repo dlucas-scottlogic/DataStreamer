@@ -35,12 +35,15 @@
   padding: 5px;
 
   text-overflow: ellipsis;
+
+  display: inline-block;
+  width: 33%;
 }
 
 #demo-content > div > span {
   flex-grow: 1;
   text-overflow: ellipsis;
-  
+
   display: inline-block;
   width: 33%;
 }

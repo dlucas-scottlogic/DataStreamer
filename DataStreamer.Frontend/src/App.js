@@ -49,8 +49,9 @@ function App() {
         </nav>
 
         <div className="jumbotron">
-            <h1 className="icon-header title">DataHelix Generator</h1>
-            <Stream />
+            <h1 className="icon-header title">DataHelix Generator</h1>            
+              <Stream />            
+            
         </div>
 
         <div className="container">

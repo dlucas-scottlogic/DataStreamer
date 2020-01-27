@@ -1,5 +1,5 @@
 import React from 'react';
-import Stream from './Components/Stream'
+import DataStream from './Components/DataStream'
 import './Styles/Bootstrap.css';
 import './Styles/Style.css';
 import './Styles/App.css';
@@ -50,7 +50,7 @@ function App() {
 
         <div className="jumbotron">
             <h1 className="icon-header title">DataHelix Generator</h1>            
-              <Stream />            
+              <DataStream />            
             
         </div>
 

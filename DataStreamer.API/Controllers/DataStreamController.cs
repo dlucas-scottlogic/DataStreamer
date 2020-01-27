@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -15,35 +16,85 @@ namespace DataStreamer.API.Controllers
     [Route("[controller]")]
     public class DataStreamController : ControllerBase
     {
+
         [HttpGet]
         public async Task Get()
         {
             var context = ControllerContext.HttpContext;
             var isSocketRequest = context.WebSockets.IsWebSocketRequest;
 
-            if (isSocketRequest)
-            {
-                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                await GetMessages(context, webSocket);
-            }
-            else
+            if (!isSocketRequest)
             {
                 context.Response.StatusCode = 400;
+                return;
+            }
+
+            using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+            {
+                StreamData streamData = null;
+                var stringResult = await ReceiveString(webSocket);
+
+                try
+                {
+                    streamData = JsonConvert.DeserializeObject<StreamData>(stringResult);
+
+                }
+                catch
+                {
+                    throw new Exception("Message was not valid json");
+                }
+
+                if (streamData != null)
+                {
+                    // write profile to disk
+                    var profilePath = System.Environment.GetEnvironmentVariable("profilepath");
+                    WriteFile(profilePath, streamData.JsonProfile);
+                    // send data
+                    await SendMessages(context, webSocket, streamData);
+                }
             }
         }
 
-        private async Task GetMessages(HttpContext context, WebSocket webSocket)
+        private async Task<string> ReceiveString(WebSocket webSocket)
+        {
+            var buffer = new ArraySegment<byte>(new byte[1024 * 4]);
+            using (var memoryStream = new MemoryStream())
+            {
+                WebSocketReceiveResult result;
+                do
+                {
+                    result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+                    memoryStream.Write(buffer.Array, 0, result.Count);
+                }
+                while (!result.EndOfMessage);
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                if (result.MessageType != WebSocketMessageType.Text)
+                {
+                    throw new Exception("WebSocketMessageType was not Text.");
+                }
+
+                using (var reader = new StreamReader(memoryStream, Encoding.UTF8))
+                {
+                    return await reader.ReadToEndAsync();
+                }
+            }
+        }
+
+        private async Task SendMessages(HttpContext context, WebSocket webSocket, StreamData streamData)
         {
             var javaPath = System.Environment.GetEnvironmentVariable("javapath");
             var generatorJar = System.Environment.GetEnvironmentVariable("generatorpath");
             var profilePath = System.Environment.GetEnvironmentVariable("profilepath");
+            var maxRows = streamData.MaxRows.HasValue ? $"--max-rows={streamData.MaxRows}" : "";
 
             var datahelixProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = javaPath,
-                    Arguments = $"-jar {generatorJar} --max-rows=100 --profile-file={profilePath} --output-format=json",
+                    Arguments = $"-jar {generatorJar} {maxRows} --profile-file={profilePath} --output-format=json",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
@@ -71,9 +122,9 @@ namespace DataStreamer.API.Controllers
                 var bytes = Encoding.ASCII.GetBytes(line);
                 var arraySegment = new ArraySegment<byte>(bytes);
                 await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
-                Thread.Sleep(200); //sleeping so that we can see several messages are sent
+                Thread.Sleep(streamData.StreamDelay ?? 0 ); //sleeping so that we can see several messages are sent
             }
-            
+
             if (datahelixProcess.ExitCode != 0)
             {
                 var errorMessages = String.Join("\r\n", errors);
@@ -81,6 +132,23 @@ namespace DataStreamer.API.Controllers
             }
 
             await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of stream", CancellationToken.None);
-        }        
+        }
+
+        private void WriteFile(string path, string content)
+        {
+            using (StreamWriter outputFile = new StreamWriter(path))
+            {
+                outputFile.WriteLine(content);
+            }
+        }
+
+    }
+
+    public class StreamData
+    {
+        public long? MaxRows { get; set; }
+        public int? StreamDelay { get; set; }
+        public string JsonProfile { get; set; }
     }
 }
+

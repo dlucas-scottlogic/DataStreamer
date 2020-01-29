@@ -10,7 +10,8 @@ function DataStream() {
         { "name": "JobTitle", "type": "string" }        
       ]
     const dataProfile = {                
-        'streamDelay': 50,
+        'streamDelay': 200,
+        'maxRows': 999999999,
         'jsonProfile' : JSON.stringify({
             "fields": fields,
             "constraints": [

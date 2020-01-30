@@ -5,6 +5,8 @@ import './Styles/Style.css';
 import './Styles/App.css';
 
 function App() {
+    let context = {};
+
   return (    
     <div className="App">
         <nav className="navbar navbar-expand-lg">
@@ -50,7 +52,7 @@ function App() {
 
         <div className="jumbotron">
             <h1 className="icon-header title">DataHelix Generator</h1>            
-              <DataStream />            
+              <DataStream context={context} />
             
         </div>
 

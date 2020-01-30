@@ -2,10 +2,10 @@ import React, {useState, useEffect} from 'react';
 import {openFile} from '../Helper';
 import {DataStreamURL} from '../Api-config';
 
-function DataStream() {  
+const DataStream = ({ context }) => {  
 
-    var webSocket;
     var nextId = 1;
+    var webSocket = context.webSocket;
     
     const defaultFields = [
         { "name": "Name", "type": "firstname" },
@@ -27,9 +27,9 @@ function DataStream() {
     const [jsonProfile, setJsonProfile] = useState(defaultJsonProfile);    
     const [dataSpanList, setDataSpanList] = useState([]);    
 
-    useEffect(stream,[jsonProfile])
+    useEffect(() => stream(), [jsonProfile])
 
-    function onClickSetProfile(){        
+    const onClickSetProfile = (e) => {        
         openFile('.json', false)
             .then(
                 files => {                       
@@ -40,46 +40,54 @@ function DataStream() {
                             return;
                         }                        
                         
+                        setDataSpanList([]);
                         setJsonProfile(fileContent);
             })                    
     }
     
-    function stream() { 
-        if(webSocket != null){
-            webSocket.close();
-        }
-        webSocket = new WebSocket(DataStreamURL);        
+    const stream = () => { 
+        if(context.webSocket != null){
+            context.webSocket.close();
 
-        webSocket.onopen = function(event){ 
+            setDataSpanList([]);
+        }
+        if (context.reloadHandle) {
+            window.clearTimeout(context.reloadHandle);
+            context.reloadHandle = null;
+        }
+
+        context.webSocket = new WebSocket(DataStreamURL);
+        let rows = [];
+
+        context.webSocket.onopen = function(event){ 
             var dataProfile = {                
                 'maxRows': 99999999,
                 'jsonProfile' : JSON.stringify(jsonProfile)
             }          
-            webSocket.send(JSON.stringify(dataProfile));
+            context.webSocket.send(JSON.stringify(dataProfile));
         }            
 
-        webSocket.onmessage = function (message) {
+        context.webSocket.onmessage = function (message) {
             var data = JSON.parse(message.data);  
             data.uid = nextId++;
 
-            if (dataSpanList.length >= 25) {
-                dataSpanList.pop();
+            if (rows.length >= 25) {
+                rows.pop();
             }
 
-            dataSpanList.unshift(data);
+            rows.unshift(data);
 
-            let newRows = [ ];
-            dataSpanList.forEach(row => newRows.push(row));
-
-            setDataSpanList(newRows);
+            setDataSpanList(() => {
+                return [ ...rows ];
+            });
             
                      
-            window.setTimeout(function() {
-                webSocket.send("next");
-            }, 100);
+            context.reloadHandle = window.setTimeout(function() {
+                context.webSocket.send("next");
+            }, 50);
         }        
 
-        webSocket.onerror = function(error) {
+        context.webSocket.onerror = function(error) {
             console.log('WebSocket Error: ' + error);
         };
         

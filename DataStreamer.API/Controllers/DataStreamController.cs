@@ -47,10 +47,10 @@ namespace DataStreamer.API.Controllers
                 if (streamData != null)
                 {
                     // write profile to disk
-                    var profilePath = System.Environment.GetEnvironmentVariable("profilepath");
-                    WriteFile(profilePath, streamData.JsonProfile);
+                    var profilePath = Environment.GetEnvironmentVariable("profilepath");
+                    var filename = WriteFile(streamData.JsonProfile);
                     // send data
-                    await SendMessages(context, webSocket, streamData);
+                    await SendMessages(webSocket, streamData, filename);
                 }
             }
         }
@@ -82,11 +82,10 @@ namespace DataStreamer.API.Controllers
             }
         }
 
-        private async Task SendMessages(HttpContext context, WebSocket webSocket, StreamData streamData)
+        private async Task SendMessages(WebSocket webSocket, StreamData streamData, string profilePath)
         {
-            var javaPath = System.Environment.GetEnvironmentVariable("javapath");
-            var generatorJar = System.Environment.GetEnvironmentVariable("generatorpath");
-            var profilePath = System.Environment.GetEnvironmentVariable("profilepath");
+            var javaPath = Environment.GetEnvironmentVariable("javapath");
+            var generatorJar = Environment.GetEnvironmentVariable("generatorpath");
             var maxRows = streamData.MaxRows.HasValue ? $"--max-rows={streamData.MaxRows}" : "";
 
             var datahelixProcess = new Process
@@ -94,7 +93,7 @@ namespace DataStreamer.API.Controllers
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = javaPath,
-                    Arguments = $"-jar {generatorJar} {maxRows} --profile-file={profilePath} --output-format=json",
+                    Arguments = $"-jar {generatorJar} {maxRows} \"--profile-file={profilePath}\" --output-format=json",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
@@ -127,19 +126,23 @@ namespace DataStreamer.API.Controllers
 
             if (datahelixProcess.ExitCode != 0)
             {
-                var errorMessages = String.Join("\r\n", errors);
+                var errorMessages = string.Join("\r\n", errors);
                 throw new InvalidOperationException($"Process exited with error code {datahelixProcess.ExitCode}\r\n{errorMessages}");
             }
 
             await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of stream", CancellationToken.None);
         }
 
-        private void WriteFile(string path, string content)
+        private string WriteFile(string content)
         {
+            var path = Path.GetTempFileName();
+
             using (StreamWriter outputFile = new StreamWriter(path))
             {
                 outputFile.WriteLine(content);
             }
+
+            return path;
         }
 
     }

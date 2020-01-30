@@ -6,7 +6,6 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -101,36 +100,64 @@ namespace DataStreamer.API.Controllers
                 }
             };
 
-            var errors = new List<string>();
-            datahelixProcess.ErrorDataReceived += (sender, args) =>
+            try
             {
-                errors.Add(args.Data);
-            };
+                var errors = new List<string>();
+                datahelixProcess.ErrorDataReceived += (sender, args) =>
+                {
+                    errors.Add(args.Data);
+                };
 
-            if (!datahelixProcess.Start())
+                if (!datahelixProcess.Start())
+                {
+                    throw new Exception($"Could not start datahelix. Filename: {datahelixProcess.StartInfo.FileName} Exitcode: {datahelixProcess.ExitCode} ");
+                }
+
+                Console.WriteLine($"Process started: {datahelixProcess.Id}");
+
+                datahelixProcess.BeginErrorReadLine();
+
+                while (!datahelixProcess.StandardOutput.EndOfStream)
+                {
+                    string line = datahelixProcess.StandardOutput.ReadLine();
+
+                    var bytes = Encoding.ASCII.GetBytes(line);
+                    var arraySegment = new ArraySegment<byte>(bytes);
+                    await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                    var receiveBuffer = new byte[255];
+                    var respondedInTime = webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
+                    if (!respondedInTime)
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Timeout waiting for next data row", CancellationToken.None);
+                        return; //which will kill the process
+                    }
+                }
+
+                if (datahelixProcess.ExitCode != 0)
+                {
+                    var errorMessages = string.Join("\r\n", errors);
+                    throw new InvalidOperationException($"Process exited with error code {datahelixProcess.ExitCode}\r\n{errorMessages}");
+                }
+
+                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of stream", CancellationToken.None);
+            }
+            finally
             {
-                throw new Exception($"Could not start datahelix. Filename: {datahelixProcess.StartInfo.FileName} Exitcode: {datahelixProcess.ExitCode} ");
+                CloseDataHelixProcess(datahelixProcess);
+            }
+        }
+
+        private void CloseDataHelixProcess(Process datahelixProcess)
+        {
+            if (datahelixProcess.HasExited)
+            {
+                Console.WriteLine($"Process has exited: {datahelixProcess.Id}");
+                return;
             }
 
-            datahelixProcess.BeginErrorReadLine();
-
-            while (!datahelixProcess.StandardOutput.EndOfStream)
-            {
-                string line = datahelixProcess.StandardOutput.ReadLine();
-
-                var bytes = Encoding.ASCII.GetBytes(line);
-                var arraySegment = new ArraySegment<byte>(bytes);
-                await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
-                Thread.Sleep(streamData.StreamDelay ?? 0 ); //sleeping so that we can see several messages are sent
-            }
-
-            if (datahelixProcess.ExitCode != 0)
-            {
-                var errorMessages = string.Join("\r\n", errors);
-                throw new InvalidOperationException($"Process exited with error code {datahelixProcess.ExitCode}\r\n{errorMessages}");
-            }
-
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of stream", CancellationToken.None);
+            Console.WriteLine($"Killing process: {datahelixProcess.Id}");
+            datahelixProcess.Kill();
         }
 
         private string WriteFile(string content)
@@ -150,7 +177,6 @@ namespace DataStreamer.API.Controllers
     public class StreamData
     {
         public long? MaxRows { get; set; }
-        public int? StreamDelay { get; set; }
         public string JsonProfile { get; set; }
     }
 }

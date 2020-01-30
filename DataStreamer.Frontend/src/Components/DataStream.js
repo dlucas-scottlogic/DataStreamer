@@ -10,7 +10,6 @@ function DataStream() {
         { "name": "JobTitle", "type": "string" }        
       ]
     const dataProfile = {                
-        'streamDelay': 200,
         'maxRows': 999999999,
         'jsonProfile' : JSON.stringify({
             "fields": fields,
@@ -26,7 +25,7 @@ function DataStream() {
     }, [])
 
     function stream () {
-        var webSocket = new WebSocket(DataStreamURL);
+        let webSocket = new WebSocket(DataStreamURL);
 
         webSocket.onopen = function(event){           
             webSocket.send(JSON.stringify(dataProfile));
@@ -51,15 +50,24 @@ function DataStream() {
             <div class="dataitem">
                ${dataSpanList}          
             </div>`);
-        }       
+         
+            window.setTimeout(function() {
+                webSocket.send("next");
+            }, 100);
+        }
+        
+        window.onbeforeunload = function() {
+            webSocket.onclose = function() { };
+            webSocket.close();
+        }
 
         webSocket.onerror = function(error) {
             console.log('WebSocket Error: ' + error);
-            };             
+        };
     }
 
     return (      
-        <div id="demo-content">             
+        <div id="demo-content">
             <div id="field-headers">
             {fields.map(item =>
                 <label>{item.name}</label>

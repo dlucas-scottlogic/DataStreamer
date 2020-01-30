@@ -45,7 +45,6 @@ function DataStream() {
     }
     
     function stream() { 
-        console.log('stream called');
         if(webSocket != null){
             webSocket.close();
         }
@@ -74,8 +73,6 @@ function DataStream() {
             dataSpanList.forEach(row => newRows.push(row));
 
             setDataSpanList(newRows);
-            console.log(newRows);
-            console.log(dataSpanList);
         }       
 
         webSocket.onerror = function(error) {

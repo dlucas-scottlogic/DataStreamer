@@ -1,0 +1,30 @@
+{
+  "fields": [
+    {
+      "name": "Nameeeee",
+      "type": "firstname"
+    },
+    {
+      "name": "Ageeeee",
+      "type": "integer"
+    },
+    {
+      "name": "JobTitleeee",
+      "type": "string"
+    }
+  ],
+  "constraints": [
+    {
+      "field": "JobTitle",
+      "matchingRegex": "[a-z]{1,10}"
+    },
+    {
+      "field": "Age",
+      "greaterThan": 0
+    },
+    {
+      "field": "Age",
+      "lessThan": 100
+    }
+  ]
+}

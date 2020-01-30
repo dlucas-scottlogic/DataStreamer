@@ -8,15 +8,16 @@ const DataStream = ({ context }) => {
     var webSocket = context.webSocket;
     
     const defaultFields = [
-        { "name": "Name", "type": "firstname" },
-        { "name": "Age", "type": "integer" },     
-        { "name": "JobTitle", "type": "string" }        
-    ]
+        {"name": "FirstName", "type": "faker.Address.firstName" },
+        {"name": "FirstLast", "type": "faker.Address.lastName" },
+        {"name": "Age", "type": "integer" },
+        {"name": "Industry", "type": "faker.job.field" },
+        {"name": "JobTitle", "type": "faker.job.position" }
+      ]
 
     const defaultConstraints = [
-        { "field": "JobTitle", "matchingRegex": "[a-z]{1,10}" },
-        { "field": "Age", "greaterThan": 0 },
-        { "field": "Age", "lessThan": 100 }       
+        {"field": "Age", "greaterThan": 0},
+        {"field": "Age", "lessThan": 100}
     ]
     
     var defaultJsonProfile = {

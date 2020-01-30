@@ -1,0 +1,33 @@
+{
+  "fields": [
+    {
+      "name": "FirstName",
+      "type": "faker.Address.firstName"
+    },
+	{
+      "name": "FirstLast",
+      "type": "faker.Address.lastName"
+    },
+    {
+      "name": "Age",
+      "type": "integer"
+    },
+	{"name": "Industry",
+	"type": "faker.job.field"
+	},
+    {
+      "name": "JobTitle",
+      "type": "faker.job.position"
+    }
+  ],
+  "constraints": [
+    {
+      "field": "Age",
+      "greaterThan": 0
+    },
+    {
+      "field": "Age",
+      "lessThan": 100
+    }
+  ]
+}

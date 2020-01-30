@@ -1,0 +1,51 @@
+{
+    "fields": [
+	{
+      "name": "ISIN",
+      "type": "ISIN",
+      "nullable": false
+    },
+    {
+      "name": "Stock",
+      "type": "faker.stock.nyseSymbol",
+      "nullable": false
+    },
+    {
+      "name": "UnitsHeld",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "UnitPrice",
+      "type": "decimal",
+      "nullable": false
+    },
+    {
+      "name": "CountryOfOrigin",
+      "type": "faker.country.name",
+      "nullable": false
+    }
+  ],
+  "constraints": [  
+    {
+      "field": "UnitPrice",
+      "granularTo": 0.01
+    },
+    {
+      "field": "UnitPrice",
+      "greaterThan": 0
+    },
+    {
+      "field": "UnitPrice",
+      "lessThan": 1000
+    },
+    {
+      "field": "UnitsHeld",
+      "greaterThanOrEqualTo": 0
+    },
+    {
+      "field": "UnitsHeld",
+      "lessThan": 1000000
+    }
+  ]
+}

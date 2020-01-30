@@ -1,79 +1,115 @@
-import React, { useEffect }  from 'react';
-import $ from 'jquery';
+import React, {useState, useEffect} from 'react';
+import {openFile} from '../Helper';
 import {DataStreamURL} from '../Api-config';
 
 function DataStream() {  
 
-    const fields = [
+    var webSocket;
+    var nextId = 1;
+    
+    const defaultFields = [
         { "name": "Name", "type": "firstname" },
         { "name": "Age", "type": "integer" },     
         { "name": "JobTitle", "type": "string" }        
-      ]
-    const dataProfile = {                
-        'maxRows': 999999999,
-        'jsonProfile' : JSON.stringify({
-            "fields": fields,
-            "constraints": [
-                { "field": "JobTitle", "matchingRegex": "[a-z]{1,10}" },
-                { "field": "Age", "greaterThan": 0 },
-                { "field": "Age", "lessThan": 100 }       
-            ]
-        })
+    ]
+
+    const defaultConstraints = [
+        { "field": "JobTitle", "matchingRegex": "[a-z]{1,10}" },
+        { "field": "Age", "greaterThan": 0 },
+        { "field": "Age", "lessThan": 100 }       
+    ]
+    
+    var defaultJsonProfile = {
+        "fields": defaultFields,
+        "constraints": defaultConstraints
+    };
+
+    const [jsonProfile, setJsonProfile] = useState(defaultJsonProfile);    
+    const [dataSpanList, setDataSpanList] = useState([]);    
+
+    useEffect(stream,[jsonProfile])
+
+    function onClickSetProfile(){        
+        openFile('.json', false)
+            .then(
+                files => {                       
+                    var filename = Object.keys(files)[0];
+                    var profile = files[filename];                                    
+                        var fileContent = JSON.parse(profile.content);
+                        if (!fileContent.fields) {
+                            return;
+                        }                        
+                        
+                        setJsonProfile(fileContent);
+            })                    
     }
-    useEffect(()=>{
-        stream();
-    }, [])
+    
+    function stream() { 
+        if(webSocket != null){
+            webSocket.close();
+        }
+        webSocket = new WebSocket(DataStreamURL);        
 
-    function stream () {
-        let webSocket = new WebSocket(DataStreamURL);
-
-        webSocket.onopen = function(event){           
+        webSocket.onopen = function(event){ 
+            var dataProfile = {                
+                'maxRows': 99999999,
+                'jsonProfile' : JSON.stringify(jsonProfile)
+            }          
             webSocket.send(JSON.stringify(dataProfile));
         }            
 
         webSocket.onmessage = function (message) {
             var data = JSON.parse(message.data);  
+            data.uid = nextId++;
 
-            var listLength = $("#demo-content div").length
-
-            // limit list size
-            if(listLength > 25){
-                $("#demo-content .dataitem:last-child").remove();
+            if (dataSpanList.length >= 25) {
+                dataSpanList.pop();
             }
 
-            var dataSpanList = fields.map(item =>
-                `<span>${data[item.name]}</span>`
-                ).join('');
+            dataSpanList.unshift(data);
 
-            // insert content divs, after the field headers
-            $("#demo-content #field-headers").after(`
-            <div class="dataitem">
-               ${dataSpanList}          
-            </div>`);
-         
+            let newRows = [ ];
+            dataSpanList.forEach(row => newRows.push(row));
+
+            setDataSpanList(newRows);
+            
+                     
             window.setTimeout(function() {
                 webSocket.send("next");
             }, 100);
-        }
+        }        
+
+        webSocket.onerror = function(error) {
+            console.log('WebSocket Error: ' + error);
+        };
         
         window.onbeforeunload = function() {
             webSocket.onclose = function() { };
             webSocket.close();
         }
-
-        webSocket.onerror = function(error) {
-            console.log('WebSocket Error: ' + error);
-        };
     }
 
-    return (      
-        <div id="demo-content">
-            <div id="field-headers">
-            {fields.map(item =>
-                <label>{item.name}</label>
-            )}                           
+    return (
+        <React.Fragment>
+            <div>
+                <span>
+                    <button id="setProfileButton" onClick={onClickSetProfile}>Upload profile</button>
+                </span>
             </div>
-        </div>        
+
+            <div id="demo-content">   
+                <div id="field-headers">
+                    {jsonProfile.fields.map(item =>
+                        <label key={item.name}>{item.name}</label>
+                    )} 
+                </div>
+                {dataSpanList.map(row =>
+                    (<div className="dataitem" key={row.uid}>
+                        {jsonProfile.fields.map(field => (<span key={row.uid + '_' + field.name}>{row[field.name]}</span>))}
+                    </div>)
+                )}          
+            </div>        
+        </React.Fragment> 
     );          
 }
 

@@ -51,9 +51,7 @@ function App() {
         </nav>
 
         <div className="jumbotron">
-            <h1 className="icon-header title">DataHelix Generator</h1>            
               <DataStream context={context} />
-            
         </div>
 
         <div className="container">

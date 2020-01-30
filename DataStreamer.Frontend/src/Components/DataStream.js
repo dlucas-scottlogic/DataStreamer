@@ -84,7 +84,7 @@ const DataStream = ({ context }) => {
                      
             context.reloadHandle = window.setTimeout(function() {
                 context.webSocket.send("next");
-            }, 50);
+            }, 100);
         }        
 
         context.webSocket.onerror = function(error) {
@@ -99,11 +99,7 @@ const DataStream = ({ context }) => {
 
     return (
         <React.Fragment>
-            <div>
-                <span>
-                    <button id="setProfileButton" onClick={onClickSetProfile}>Upload profile</button>
-                </span>
-            </div>
+            <h1 className="icon-header title" onClick={onClickSetProfile}>DataHelix Generator</h1>
 
             <div id="demo-content">   
                 <div id="field-headers">

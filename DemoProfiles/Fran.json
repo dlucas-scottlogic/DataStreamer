@@ -1,12 +1,18 @@
 {
-    "fields": [
-	  {
-      "name": "forename",
+    "fields": [	
+    {
+      "name": "file_id",
+      "type": "integer",
+      "nullable": false,
+      "unique": true
+    },
+	{
+      "name": "buyer_forename",
       "type": "faker.name.firstName",
       "nullable": false
     },
-	  {
-      "name": "surname",
+	{
+      "name": "buyer_surname",
       "type": "faker.name.lastName",
       "nullable": false
     },
@@ -19,9 +25,14 @@
       "name": "nyse_stock",
       "type": "faker.stock.nyseSymbol",
       "nullable": false
+    },	
+	{
+      "name": "isin",
+      "type": "ISIN",
+      "nullable": false
     },
     {
-      "name": "units_held",
+      "name": "units_bought",
       "type": "integer",
       "nullable": false
     },
@@ -44,28 +55,16 @@
       "name": "close_date",
       "type": "datetime",
       "nullable": true
-    },
-    {
-      "name": "is_open",
-      "type": "boolean",
-      "nullable": false
-    }, 
-	  {
-      "name": "isin",
-      "type": "ISIN",
-      "nullable": false
-    },
-    {
-      "name": "file_id",
-      "type": "integer",
-      "nullable": false,
-      "unique": true
     }
     ],
   "constraints": [
     {
       "field": "execution_time",
-      "equalTo": "NOW"
+      "beforeOrAt": "2020-02-05T00:00:00.000"
+    },
+	{
+      "field": "execution_time",
+      "afterOrAt": "1990-01-01T00:00:00.000"
     },
 	{
       "field": "file_id",
@@ -84,28 +83,6 @@
       "equalToField": "open_date",
       "offset": 3,
       "offsetUnit": "years"
-    },
-    {
-      "if": {
-        "allOf": [
-          {
-            "field": "open_date",
-            "beforeOrAt": "NOW"
-          },
-          {
-            "field": "close_date",
-            "afterOrAt": "NOW"
-          }
-        ]
-      },
-      "then": {
-        "field": "is_open",
-        "equalTo": true
-      },
-      "else": {
-        "field": "is_open",
-        "equalTo": false
-      }
     },
     {
       "field": "open_date",
@@ -128,12 +105,12 @@
       "lessThan": 1000
     },
     {
-      "field": "units_held",
+      "field": "units_bought",
       "greaterThanOrEqualTo": 0
     },
     {
-      "field": "units_held",
-      "lessThan": 1000000
+      "field": "units_bought",
+      "lessThan": 10000
     }
   ]
 }

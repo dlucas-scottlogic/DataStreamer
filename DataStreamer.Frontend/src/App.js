@@ -1,11 +1,10 @@
 import React from 'react';
-import DataStream from './Components/DataStream'
+import DataStreamComponent from './Components/DataStreamComponent'
 import './Styles/Bootstrap.css';
 import './Styles/Style.css';
 import './Styles/App.css';
 
 function App() {
-    let context = {};
 
   return (    
     <div className="App">
@@ -51,7 +50,7 @@ function App() {
         </nav>
 
         <div className="jumbotron">
-              <DataStream context={context} />
+              <DataStreamComponent />
         </div>
 
         <div className="container">

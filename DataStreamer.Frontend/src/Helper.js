@@ -1,12 +1,10 @@
-export const openFile = (accept, multiple) => {
+export const openFile = (fileType) => {
     return new Promise((resolve, reject) => {
         const input = document.createElement("INPUT");
         input.type = "file";
-        if (multiple) {
-            input.multiple = true;
-        }
-        if (accept) {
-            input.accept = accept;
+
+        if (fileType) {
+            input.accept = fileType;
         }
         document.body.appendChild(input);
         input.addEventListener("change", function(e) {
@@ -16,33 +14,30 @@ export const openFile = (accept, multiple) => {
                 return; //NOTE: Reject isn't called as it makes it consistent with when the 'Cancel' button is clicked in the open dialog, which cannot be detected.
             }
 
-            const fileContents = {};
-
-            for (var index = 0; index < files.length; index++) {
-                const file = files[index];
-                const reader = new FileReader();
-                reader.onload = function (loader) {
-                    const contents = loader.target.result;
-                    fileContents[file.name] = {
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                        content: contents
-                    };
-                    toLoad--;
-
-                    if (toLoad === 0) {
-                        resolve(fileContents);
-                    }
+            const fileContents = {};        
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = function (loader) {
+                const contents = loader.target.result;
+                fileContents[file.name] = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    content: contents
                 };
-                reader.readAsText(file);
-            }
+                toLoad--;
+
+                if (toLoad === 0) {
+                    resolve(fileContents);
+                }
+            };
+            reader.readAsText(file);
         });
 
         input.click();
 
         setTimeout(function() {
             document.body.removeChild(input);
-        });
+        }, 99000);
     });
 }

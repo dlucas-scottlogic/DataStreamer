@@ -1,74 +1,38 @@
 import React, {useState, useEffect} from 'react';
-import {openFile} from '../Helper';
 import {DataStreamURL} from '../Api-config';
 
-const DataStream = ({ context }) => {  
+const DataStream = ({ context, jsonProfile}) => {  
 
     var nextId = 1;
-    var webSocket = context.webSocket;
+    var webSocket; 
     
-    const defaultFields = [
-        {"name": "FirstName", "type": "faker.Address.firstName" },
-        {"name": "FirstLast", "type": "faker.Address.lastName" },
-        {"name": "Age", "type": "integer" },
-        {"name": "Industry", "type": "faker.job.field" },
-        {"name": "JobTitle", "type": "faker.job.position" }
-      ]
-
-    const defaultConstraints = [
-        {"field": "Age", "greaterThan": 0},
-        {"field": "Age", "lessThan": 100}
-    ]
-    
-    var defaultJsonProfile = {
-        "fields": defaultFields,
-        "constraints": defaultConstraints
-    };
-
-    const [jsonProfile, setJsonProfile] = useState(defaultJsonProfile);    
     const [dataSpanList, setDataSpanList] = useState([]);    
 
     useEffect(() => stream(), [jsonProfile])
 
-    const onClickSetProfile = (e) => {        
-        openFile('.json', false)
-            .then(
-                files => {                       
-                    var filename = Object.keys(files)[0];
-                    var profile = files[filename];                                    
-                        var fileContent = JSON.parse(profile.content);
-                        if (!fileContent.fields) {
-                            return;
-                        }                        
-                        
-                        setDataSpanList([]);
-                        setJsonProfile(fileContent);
-            })                    
-    }
-    
     const stream = () => { 
-        if(context.webSocket != null){
-            context.webSocket.close();
+        setDataSpanList([]);
 
-            setDataSpanList([]);
+        if(webSocket != null){
+            webSocket.close();            
         }
         if (context.reloadHandle) {
             window.clearTimeout(context.reloadHandle);
             context.reloadHandle = null;
         }
 
-        context.webSocket = new WebSocket(DataStreamURL);
+        webSocket = new WebSocket(DataStreamURL);
         let rows = [];
 
-        context.webSocket.onopen = function(event){ 
+        webSocket.onopen = function(event){ 
             var dataProfile = {                
                 'maxRows': 99999999,
                 'jsonProfile' : JSON.stringify(jsonProfile)
             }          
-            context.webSocket.send(JSON.stringify(dataProfile));
+            webSocket.send(JSON.stringify(dataProfile));
         }            
 
-        context.webSocket.onmessage = function (message) {
+        webSocket.onmessage = function (message) {
             var data = JSON.parse(message.data);  
             data.uid = nextId++;
 
@@ -80,15 +44,14 @@ const DataStream = ({ context }) => {
 
             setDataSpanList(() => {
                 return [ ...rows ];
-            });
-            
+            });            
                      
             context.reloadHandle = window.setTimeout(function() {
-                context.webSocket.send("next");
+                webSocket.send("next");
             }, 100);
         }        
 
-        context.webSocket.onerror = function(error) {
+        webSocket.onerror = function(error) {
             console.log('WebSocket Error: ' + error);
         };
         
@@ -96,12 +59,16 @@ const DataStream = ({ context }) => {
             webSocket.onclose = function() { };
             webSocket.close();
         }
+
+        return function cleanup(){            
+            if(webSocket.readyState === webSocket.OPEN || webSocket.readyState === webSocket.CONNECTING){
+                console.log('cleanup - closing websocket')
+                webSocket.close();
+            }            
+        };
     }
 
     return (
-        <React.Fragment>
-            <h1 className="icon-header title" onClick={onClickSetProfile}>DataHelix Generator</h1>
-
             <div id="demo-content">   
                 <div id="field-headers">
                     {jsonProfile.fields.map(item =>
@@ -113,8 +80,7 @@ const DataStream = ({ context }) => {
                         {jsonProfile.fields.map(field => (<span key={row.uid + '_' + field.name}>{row[field.name]}</span>))}
                     </div>)
                 )}          
-            </div>        
-        </React.Fragment> 
+            </div>
     );          
 }
 

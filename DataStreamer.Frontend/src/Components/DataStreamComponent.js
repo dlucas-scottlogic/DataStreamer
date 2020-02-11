@@ -1,6 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {openFile} from '../Helper';
-import {DataStreamURL} from '../Api-config';
 import DataStream from './DataStream'
 
 const DataStreamComponent = () => {
@@ -36,7 +35,7 @@ const DataStreamComponent = () => {
                         if (!fileContent.fields) {
                             return;
                         }
-                        
+
                         setJsonProfile(fileContent);
             })                    
     }

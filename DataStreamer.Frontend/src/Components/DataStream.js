@@ -7,7 +7,8 @@ const DataStream = ({ context, jsonProfile}) => {
     var webSocket; 
     
     const [dataSpanList, setDataSpanList] = useState([]);    
-
+    
+    // eslint-disable-next-line
     useEffect(() => stream(), [jsonProfile])
 
     const stream = () => { 

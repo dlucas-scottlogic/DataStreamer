@@ -125,12 +125,18 @@ namespace DataStreamer.API.Controllers
                     var arraySegment = new ArraySegment<byte>(bytes);
                     await webSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
-                    var receiveBuffer = new byte[255];
-                    var respondedInTime = webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
+                    if (webSocket.CloseStatus.HasValue)
+                    {
+                        return; //kill the process as the socket is marked as closed.
+                    }
+
+                    // wait for response, with timeout period.
+                    var respondedInTime = webSocket.ReceiveAsync(new ArraySegment<byte>(new byte[255]), CancellationToken.None).Wait(TimeSpan.FromSeconds(5));
+
                     if (!respondedInTime)
                     {
                         await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Timeout waiting for next data row", CancellationToken.None);
-                        return; //which will kill the process
+                        return; // kill the process as a timeout has occured.
                     }
                 }
 
@@ -171,7 +177,6 @@ namespace DataStreamer.API.Controllers
 
             return path;
         }
-
     }
 
     public class StreamData

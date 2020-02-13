@@ -9,7 +9,7 @@ function App() {
   return (    
     <div className="App">
         <nav className="navbar navbar-expand-lg">
-            <a className="navbar-brand" href="http://localhost:32330">DataHelix Generator</a>
+            <a className="navbar-brand" href="./DemoProfiles.zip" download>DataHelix Generator</a>
             <button
                 className="navbar-toggler"
                 type="button"

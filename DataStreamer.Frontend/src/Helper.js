@@ -2,6 +2,7 @@ export const openFile = (fileType) => {
     return new Promise((resolve, reject) => {
         const input = document.createElement("INPUT");
         input.type = "file";
+        input.hidden = "true";
 
         if (fileType) {
             input.accept = fileType;
